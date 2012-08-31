@@ -1,5 +1,29 @@
 package net.carff.android.steampunkclock;
 
+import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.Intent;
+import android.location.Address;
+import android.location.Criteria;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
+
+import net.carff.android.steampunkclock.weather.ForecastData;
+import net.carff.android.steampunkclock.weather.WeatherData;
+import net.carff.android.steampunkclock.weather.WeatherDataHandler;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -7,35 +31,15 @@ import java.util.Locale;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-
-import net.carff.android.steampunkclock.weather.ForecastData;
-import net.carff.android.steampunkclock.weather.WeatherData;
-import net.carff.android.steampunkclock.weather.WeatherDataHandler;
-import android.app.Activity;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.content.Context;
-import android.location.Address;
-import android.location.Criteria;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationManager;
-import android.os.Bundle;
-import android.provider.Settings;
-import android.text.Layout;
-import android.util.Log;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.RadioGroup.OnCheckedChangeListener;
-
 public class SteampunkclockActivity extends Activity {
 	public static WeatherData myWData;
 	public static ArrayList<ForecastData> myFData;
-	private LocationManager myLocManager;
+  private static final int[] DIM_LAYERS =
+      new int[] { R.color.dim1, R.color.dim2, R.color.dim3, R.color.dim4, R.color.dim5 };
+  private static final int[] DIM_CONTROLS =
+      new int[]
+          { R.id.dimbutton1, R.id.dimbutton2, R.id.dimbutton3, R.id.dimbutton4, R.id.dimbutton5 };
+  private LocationManager myLocManager;
 	private String provider;
 	private Location myLocation;
 	private Geocoder geocoder;
@@ -47,7 +51,6 @@ public class SteampunkclockActivity extends Activity {
 	private RadioGroup mRadioGroup;
 	private View dimLayout;
 
-	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -103,11 +106,46 @@ public class SteampunkclockActivity extends Activity {
 			}
         	
         });
+
+        checkIntentParameters();
     }
-    
-    
-    
-    class SteamPunkRunner implements Runnable {
+
+  private void checkIntentParameters() {
+    Intent intent = getIntent();
+    if (intent == null) {
+      return;
+    }
+
+    Uri uri = intent.getData();
+    if (uri == null) {
+      return;
+    }
+
+    String dimLevel = uri.getQueryParameter("dimlevel");
+
+    if (dimLevel != null) {
+      try {
+        int requested = Integer.parseInt(dimLevel);
+        setDimLevel(requested - 1);
+      } catch (NumberFormatException e) {
+        // ignored
+      }
+    }
+  }
+
+  /**
+   * @param level Dim level (0 - 4).
+   */
+  private void setDimLevel(int level) {
+    if (level < 0 || level > DIM_CONTROLS.length) {
+      return;
+    }
+
+    dimLayout.setBackgroundResource(DIM_LAYERS[level]);
+    mRadioGroup.check(DIM_CONTROLS[level]);
+  }
+
+  class SteamPunkRunner implements Runnable {
     	public void run() {
     		while (!Thread.currentThread().isInterrupted()) {
           	  try {
@@ -159,8 +197,7 @@ public class SteampunkclockActivity extends Activity {
     	try {
 			Thread.sleep(i);
 		} catch (InterruptedException e) {
-			
-			e.printStackTrace();
+			Log.e("Activity", "Interrupted in weather data wait", e);
 		}
     }
 }
