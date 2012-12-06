@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.RadioGroup.OnCheckedChangeListener;
@@ -38,6 +39,9 @@ public class TimeFragment extends Fragment {
     private ImageView lowSecondImage;
     private int highSecondResource;
     private int lowSecondResource;
+    
+    private RadioButton hr12Button;
+    private RadioButton hr24Button;
     
     private int mHour;
     private int mMinute;
@@ -74,6 +78,9 @@ public class TimeFragment extends Fragment {
         Typeface tf = Typeface.createFromAsset(getActivity().getAssets(), font);
         
         hourRadioGroup = (RadioGroup) view.findViewById(R.id.hour_group);
+        hr12Button = (RadioButton) view.findViewById(R.id.hr12);
+        hr24Button = (RadioButton) view.findViewById(R.id.hr24);
+        
         hourRadioGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             
             @Override
@@ -141,11 +148,16 @@ public class TimeFragment extends Fragment {
                     
                     mAmPm = cal.get(Calendar.AM_PM);
                     
+                    
                     if (((SteampunkClockApplication) getActivity().getApplication()).getTwelveHour()) {
+                        hr12Button.setChecked(true);
                         if ((mAmPm == Calendar.PM)) {
                             mHour -= 12;
                         }
+                    } else {
+                        hr24Button.setChecked(true);
                     }
+                  
                
                     //Update THE HOURS
                     int highHour= (int) ( mHour / 10);
